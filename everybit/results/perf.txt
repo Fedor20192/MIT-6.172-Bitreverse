@@ -1,0 +1,30 @@
+# started on Tue Aug 11 19:42:48 2026
+
+
+ Performance counter stats for './everybit -l' (5 runs):
+
+          3 283,31 msec task-clock                       #    0,999 CPUs utilized               ( +-  0,37% )
+                12      context-switches                 #    3,655 /sec                        ( +-  8,16% )
+                 0      cpu-migrations                   #    0,000 /sec                      
+                64      page-faults                      #   19,493 /sec                        ( +-  0,70% )
+    12 725 410 495      cycles                           #    3,876 GHz                         ( +-  0,36% )  (35,60%)
+        23 480 650      stalled-cycles-frontend          #    0,18% frontend cycles idle        ( +- 10,55% )  (35,72%)
+    38 531 682 939      instructions                     #    3,03  insn per cycle            
+                                                  #    0,00  stalled cycles per insn     ( +-  0,02% )  (35,84%)
+     1 331 005 361      branches                         #  405,385 M/sec                       ( +-  0,01% )  (35,96%)
+           483 477      branch-misses                    #    0,04% of all branches             ( +- 16,74% )  (36,08%)
+     5 319 639 372      L1-dcache-loads                  #    1,620 G/sec                       ( +-  0,02% )  (36,02%)
+           463 300      L1-dcache-load-misses            #    0,01% of all L1-dcache accesses   ( +-  5,55% )  (35,90%)
+   <not supported>      LLC-loads                                                             
+   <not supported>      LLC-load-misses                                                       
+        12 668 516      L1-icache-loads                  #    3,858 M/sec                       ( +- 26,37% )  (35,78%)
+            98 160      L1-icache-load-misses            #    0,77% of all L1-icache accesses   ( +-  8,29% )  (35,66%)
+            87 282      dTLB-loads                       #   26,584 K/sec                       ( +-  7,56% )  (35,53%)
+            10 501      dTLB-load-misses                 #   12,03% of all dTLB cache accesses  ( +-  9,68% )  (35,48%)
+             2 320      iTLB-loads                       #  706,604 /sec                        ( +- 17,95% )  (35,48%)
+             1 343      iTLB-load-misses                 #   57,89% of all iTLB cache accesses  ( +-  9,32% )  (35,48%)
+           196 240      L1-dcache-prefetches             #   59,769 K/sec                       ( +-  7,03% )  (35,48%)
+   <not supported>      L1-dcache-prefetch-misses                                             
+
+            3,2851 +- 0,0122 seconds time elapsed  ( +-  0,37% )
+
