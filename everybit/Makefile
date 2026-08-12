@@ -56,8 +56,8 @@ PRODUCT = everybit
 
 # What we're building with
 CC = clang
-CFLAGS = -std=c99 -Wall -m64 -g
-LDFLAGS = -flto -fuse-ld=gold 
+CFLAGS = -std=c23 -Wall -m64 -g
+LDFLAGS = -flto -fuse-ld=gold
 
 # We need to link against the timing library for whatever OS we're on.
 PLATFORM = $(shell uname)
@@ -80,7 +80,8 @@ endif
 OLD_MODE = $(shell cat .buildmode 2> /dev/null)
 ifeq ($(DEBUG),1)
 # We want debug mode.
-CFLAGS += -O0
+CFLAGS += -O0 -fsanitize=address,undefined
+LDFLAGS += -fsanitize=address,undefined
 ifneq ($(OLD_MODE),debug)
 $(shell echo debug >.buildmode)
 endif

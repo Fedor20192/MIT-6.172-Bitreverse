@@ -28,7 +28,9 @@
 #include "./bitarray.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <sys/types.h>
@@ -65,18 +67,6 @@ static void bitarray_rotate_left(bitarray_t* const bitarray,
                                  const size_t bit_offset,
                                  const size_t bit_length,
                                  const size_t bit_left_amount);
-
-// Rotates a subarray left by one bit.
-//
-// bit_offset is the index of the start of the subarray
-// bit_length is the length of the subarray, in bits
-//
-// The subarray spans the half-open interval
-// [bit_offset, bit_offset + bit_length)
-// That is, the start is inclusive, but the end is exclusive.
-static void bitarray_rotate_left_one(bitarray_t* const bitarray,
-                                     const size_t bit_offset,
-                                     const size_t bit_length);
 
 // Portable modulo operation that supports negative dividends.
 //
@@ -184,10 +174,9 @@ void bitarray_set(bitarray_t* const bitarray,
 
 void bitarray_randfill(bitarray_t* const bitarray)
 {
-    int32_t* ptr = (int32_t*)bitarray->buf;
-    for (int64_t i = 0; i < bitarray->bit_sz / 32 + 1; i++)
+    for (int64_t i = 0; i < (bitarray->bit_sz + 7) / 8; i++)
     {
-        ptr[i] = rand();
+        bitarray->buf[i] = (char)(rand() & 0xFF);
     }
 }
 
@@ -209,6 +198,52 @@ void bitarray_rotate(bitarray_t* const bitarray,
                          modulo(-bit_right_amount, bit_length));
 }
 
+typedef unsigned char pocket;
+constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
+constexpr pocket max_pocket = (1u << pocket_bit_size) - 1;
+constexpr pocket reversed_bytes[1u << pocket_bit_size] = {
+    0, 128, 64, 192, 32, 160, 96, 224, 16, 144, 80, 208, 48, 176, 112, 240, 8, 136, 72, 200, 40, 168, 104, 232, 24, 152,
+    88, 216, 56, 184, 120, 248, 4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244, 12, 140, 76,
+    204, 44, 172, 108, 236, 28, 156, 92, 220, 60, 188, 124, 252, 2, 130, 66, 194, 34, 162, 98, 226, 18, 146, 82, 210,
+    50, 178, 114, 242, 10, 138, 74, 202, 42, 170, 106, 234, 26, 154, 90, 218, 58, 186, 122, 250, 6, 134, 70, 198, 38,
+    166, 102, 230, 22, 150, 86, 214, 54, 182, 118, 246, 14, 142, 78, 206, 46, 174, 110, 238, 30, 158, 94, 222, 62, 190,
+    126, 254, 1, 129, 65, 193, 33, 161, 97, 225, 17, 145, 81, 209, 49, 177, 113, 241, 9, 137, 73, 201, 41, 169, 105,
+    233, 25, 153, 89, 217, 57, 185, 121, 249, 5, 133, 69, 197, 37, 165, 101, 229, 21, 149, 85, 213, 53, 181, 117, 245,
+    13, 141, 77, 205, 45, 173, 109, 237, 29, 157, 93, 221, 61, 189, 125, 253, 3, 131, 67, 195, 35, 163, 99, 227, 19,
+    147, 83, 211, 51, 179, 115, 243, 11, 139, 75, 203, 43, 171, 107, 235, 27, 155, 91, 219, 59, 187, 123, 251, 7, 135,
+    71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247, 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95,
+    223, 63, 191, 127
+};
+
+static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
+{
+    size_t iters = 0;
+    if (shift == 0)
+    {
+        for (; 2 * iters + 1 < cnt; iters++)
+        {
+            const pocket right = reversed_bytes[arr[cnt - iters - 1]];
+            arr[cnt - iters - 1] = reversed_bytes[arr[iters]];
+            arr[iters] = right;
+        }
+        return iters;
+    }
+    for (; 2 * iters + 1 < cnt; iters++)
+    {
+        const pocket left = reversed_bytes[arr[cnt - iters] << (pocket_bit_size - shift) & max_pocket];
+        const pocket right = reversed_bytes[arr[cnt - iters - 1] >> shift];
+
+        arr[cnt - iters] = arr[cnt - iters] >> shift << shift;
+        arr[cnt - iters] |= reversed_bytes[arr[iters] << (pocket_bit_size - shift) & max_pocket];
+
+        arr[cnt - iters - 1] &= (1u << shift) - 1;
+        arr[cnt - iters - 1] |= reversed_bytes[arr[iters] >> shift];
+
+        arr[iters] = left | right;
+    }
+    return iters;
+}
+
 static void bitarray_reverse(bitarray_t* const bitarray, const size_t bit_offset, const size_t bit_length)
 {
     if (bit_length <= 1)
@@ -216,12 +251,32 @@ static void bitarray_reverse(bitarray_t* const bitarray, const size_t bit_offset
         return;
     }
 
-    const size_t right_bound = bit_offset + bit_length - 1;
-    for (size_t i = 0; bit_offset + i < right_bound - i; i++)
+    size_t left_bound = bit_offset, right_bound = bit_offset + bit_length - 1;
+    for (; left_bound < right_bound && left_bound % pocket_bit_size; left_bound++, right_bound--)
     {
-        const bool bit = bitarray_get(bitarray, bit_offset + i);
-        bitarray_set(bitarray, bit_offset + i, bitarray_get(bitarray, right_bound - i));
-        bitarray_set(bitarray, right_bound - i, bit);
+        const bool bit = bitarray_get(bitarray, left_bound);
+        bitarray_set(bitarray, left_bound, bitarray_get(bitarray, right_bound));
+        bitarray_set(bitarray, right_bound, bit);
+    }
+
+    if (left_bound >= right_bound)
+    {
+        return;
+    }
+
+    pocket* arr = (pocket*)bitarray->buf + left_bound / pocket_bit_size;
+    const size_t shift = (right_bound - left_bound + 1) % pocket_bit_size;
+    const size_t cnt = (right_bound - left_bound + 1) / pocket_bit_size;
+
+    const size_t iters = pocket_reverse(arr, shift, cnt);
+    left_bound += iters * pocket_bit_size;
+    right_bound -= iters * pocket_bit_size;
+
+    for (; left_bound < right_bound; left_bound++, right_bound--)
+    {
+        const bool bit = bitarray_get(bitarray, left_bound);
+        bitarray_set(bitarray, left_bound, bitarray_get(bitarray, right_bound));
+        bitarray_set(bitarray, right_bound, bit);
     }
 }
 
@@ -233,21 +288,6 @@ static void bitarray_rotate_left(bitarray_t* const bitarray,
     bitarray_reverse(bitarray, bit_offset, bit_left_amount);
     bitarray_reverse(bitarray, bit_offset + bit_left_amount, bit_length - bit_left_amount);
     bitarray_reverse(bitarray, bit_offset, bit_length);
-}
-
-static void bitarray_rotate_left_one(bitarray_t* const bitarray,
-                                     const size_t bit_offset,
-                                     const size_t bit_length)
-{
-    // Grab the first bit in the range, shift everything left by one, and
-    // then stick the first bit at the end.
-    const bool first_bit = bitarray_get(bitarray, bit_offset);
-    size_t i;
-    for (i = bit_offset; i + 1 < bit_offset + bit_length; i++)
-    {
-        bitarray_set(bitarray, i, bitarray_get(bitarray, i + 1));
-    }
-    bitarray_set(bitarray, i, first_bit);
 }
 
 static size_t modulo(const ssize_t n, const size_t m)

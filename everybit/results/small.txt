@@ -9,25 +9,31 @@ Tier 6 (≈6B) completed in [32m0.000001s[0m
 Tier 7 (≈11B) completed in [32m0.000001s[0m
 Tier 8 (≈18B) completed in [32m0.000001s[0m
 Tier 9 (≈29B) completed in [32m0.000001s[0m
-Tier 10 (≈47B) completed in [32m0.000002s[0m
-Tier 11 (≈76B) completed in [32m0.000002s[0m
-Tier 12 (≈123B) completed in [32m0.000004s[0m
-Tier 13 (≈199B) completed in [32m0.000005s[0m
-Tier 14 (≈323B) completed in [32m0.000008s[0m
-Tier 15 (≈522B) completed in [32m0.000013s[0m
-Tier 16 (≈845B) completed in [32m0.000021s[0m
-Tier 17 (≈1KB) completed in [32m0.000034s[0m
-Tier 18 (≈2KB) completed in [32m0.000053s[0m
-Tier 19 (≈3KB) completed in [32m0.000100s[0m
-Tier 20 (≈5KB) completed in [32m0.000165s[0m
-Tier 21 (≈9KB) completed in [32m0.000225s[0m
-Tier 22 (≈14KB) completed in [32m0.000382s[0m
-Tier 23 (≈23KB) completed in [32m0.000592s[0m
-Tier 24 (≈38KB) completed in [32m0.001024s[0m
-Tier 25 (≈62KB) completed in [32m0.001582s[0m
-Tier 26 (≈101KB) completed in [32m0.002479s[0m
-Tier 27 (≈164KB) completed in [32m0.004056s[0m
-Tier 28 (≈265KB) completed in [32m0.006644s[0m
-Tier 29 (≈430KB) exceeded 0.01s cutoff with time[31m 0.010590s[0m
-Succesfully completed tier: 28
+Tier 10 (≈47B) completed in [32m0.000001s[0m
+Tier 11 (≈76B) completed in [32m0.000001s[0m
+Tier 12 (≈123B) completed in [32m0.000001s[0m
+Tier 13 (≈199B) completed in [32m0.000001s[0m
+Tier 14 (≈323B) completed in [32m0.000001s[0m
+Tier 15 (≈522B) completed in [32m0.000002s[0m
+Tier 16 (≈845B) completed in [32m0.000002s[0m
+Tier 17 (≈1KB) completed in [32m0.000004s[0m
+Tier 18 (≈2KB) completed in [32m0.000005s[0m
+Tier 19 (≈3KB) completed in [32m0.000008s[0m
+Tier 20 (≈5KB) completed in [32m0.000013s[0m
+Tier 21 (≈9KB) completed in [32m0.000021s[0m
+Tier 22 (≈14KB) completed in [32m0.000030s[0m
+Tier 23 (≈23KB) completed in [32m0.000065s[0m
+Tier 24 (≈38KB) completed in [32m0.000088s[0m
+Tier 25 (≈62KB) completed in [32m0.000150s[0m
+Tier 26 (≈101KB) completed in [32m0.000232s[0m
+Tier 27 (≈164KB) completed in [32m0.000359s[0m
+Tier 28 (≈265KB) completed in [32m0.000525s[0m
+Tier 29 (≈430KB) completed in [32m0.000971s[0m
+Tier 30 (≈696KB) completed in [32m0.001539s[0m
+Tier 31 (≈1MB) completed in [32m0.002542s[0m
+Tier 32 (≈1MB) completed in [32m0.004028s[0m
+Tier 33 (≈2MB) completed in [32m0.006918s[0m
+Tier 34 (≈4MB) completed in [32m0.009849s[0m
+Tier 35 (≈7MB) exceeded 0.01s cutoff with time[31m 0.017490s[0m
+Succesfully completed tier: 34
 ---- END RESULTS ----
