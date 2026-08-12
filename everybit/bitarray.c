@@ -209,15 +209,30 @@ void bitarray_rotate(bitarray_t* const bitarray,
                          modulo(-bit_right_amount, bit_length));
 }
 
+static void bitarray_reverse(bitarray_t* const bitarray, const size_t bit_offset, const size_t bit_length)
+{
+    if (bit_length <= 1)
+    {
+        return;
+    }
+
+    const size_t right_bound = bit_offset + bit_length - 1;
+    for (size_t i = 0; bit_offset + i < right_bound - i; i++)
+    {
+        const bool bit = bitarray_get(bitarray, bit_offset + i);
+        bitarray_set(bitarray, bit_offset + i, bitarray_get(bitarray, right_bound - i));
+        bitarray_set(bitarray, right_bound - i, bit);
+    }
+}
+
 static void bitarray_rotate_left(bitarray_t* const bitarray,
                                  const size_t bit_offset,
                                  const size_t bit_length,
                                  const size_t bit_left_amount)
 {
-    for (size_t i = 0; i < bit_left_amount; i++)
-    {
-        bitarray_rotate_left_one(bitarray, bit_offset, bit_length);
-    }
+    bitarray_reverse(bitarray, bit_offset, bit_left_amount);
+    bitarray_reverse(bitarray, bit_offset + bit_left_amount, bit_length - bit_left_amount);
+    bitarray_reverse(bitarray, bit_offset, bit_length);
 }
 
 static void bitarray_rotate_left_one(bitarray_t* const bitarray,
