@@ -29,11 +29,11 @@
 
 #include <assert.h>
 #include <limits.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <sys/mman.h>
 #include <sys/types.h>
 
 
@@ -105,7 +105,14 @@ static char bitmask(const size_t bit_index);
 bitarray_t* bitarray_new(const size_t bit_sz)
 {
     // Allocate an underlying buffer of ceil(bit_sz/8) bytes.
-    char* const buf = calloc(1, (bit_sz + 7) / 8);
+    const size_t bytes = (bit_sz + 7) / 8;
+    char* buf = calloc(1, bytes);
+    if (mlock(buf, bytes) != 0)
+    {
+        perror("mlock");
+        return NULL;
+    }
+
     if (buf == NULL)
     {
         return NULL;
@@ -130,6 +137,7 @@ void bitarray_free(bitarray_t* const bitarray)
     {
         return;
     }
+    munlock(bitarray->buf, (bitarray->bit_sz + 7) / 8);
     free(bitarray->buf);
     bitarray->buf = NULL;
     free(bitarray);
@@ -221,6 +229,7 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
         }
         return iters;
     }
+    __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
     for (; 2 * iters + 1 < cnt; iters++)
     {
         const pocket left = reverse_pocket(arr[cnt - iters] << (pocket_bit_size - shift) & max_pocket);
@@ -234,6 +243,7 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
 
         arr[iters] = left | right;
     }
+    __asm__ volatile("# LLVM-MCA-END hot_loop");
     return iters;
 }
 
