@@ -16,31 +16,31 @@ Tier 13 (≈199B) completed in [32m0.000001s[0m
 Tier 14 (≈323B) completed in [32m0.000001s[0m
 Tier 15 (≈522B) completed in [32m0.000001s[0m
 Tier 16 (≈845B) completed in [32m0.000002s[0m
-Tier 17 (≈1KB) completed in [32m0.000002s[0m
+Tier 17 (≈1KB) completed in [32m0.000003s[0m
 Tier 18 (≈2KB) completed in [32m0.000003s[0m
-Tier 19 (≈3KB) completed in [32m0.000004s[0m
+Tier 19 (≈3KB) completed in [32m0.000005s[0m
 Tier 20 (≈5KB) completed in [32m0.000006s[0m
-Tier 21 (≈9KB) completed in [32m0.000010s[0m
-Tier 22 (≈14KB) completed in [32m0.000012s[0m
-Tier 23 (≈23KB) completed in [32m0.000022s[0m
-Tier 24 (≈38KB) completed in [32m0.000044s[0m
-Tier 25 (≈62KB) completed in [32m0.000066s[0m
-Tier 26 (≈101KB) completed in [32m0.000083s[0m
-Tier 27 (≈164KB) completed in [32m0.000118s[0m
-Tier 28 (≈265KB) completed in [32m0.000181s[0m
-Tier 29 (≈430KB) completed in [32m0.000290s[0m
-Tier 30 (≈696KB) completed in [32m0.000473s[0m
-Tier 31 (≈1MB) completed in [32m0.000782s[0m
-Tier 32 (≈1MB) completed in [32m0.001256s[0m
-Tier 33 (≈2MB) completed in [32m0.002005s[0m
-Tier 34 (≈4MB) completed in [32m0.003283s[0m
-Tier 35 (≈7MB) completed in [32m0.005267s[0m
-Tier 36 (≈12MB) completed in [32m0.008501s[0m
-Tier 37 (≈19MB) completed in [32m0.013845s[0m
-Tier 38 (≈31MB) completed in [32m0.022646s[0m
-Tier 39 (≈51MB) completed in [32m0.036398s[0m
-Tier 40 (≈83MB) completed in [32m0.059521s[0m
-Tier 41 (≈135MB) completed in [32m0.095244s[0m
-Tier 42 (≈218MB) exceeded 0.10s cutoff with time[31m 0.155370s[0m
+Tier 21 (≈9KB) completed in [32m0.000009s[0m
+Tier 22 (≈14KB) completed in [32m0.000011s[0m
+Tier 23 (≈23KB) completed in [32m0.000017s[0m
+Tier 24 (≈38KB) completed in [32m0.000027s[0m
+Tier 25 (≈62KB) completed in [32m0.000050s[0m
+Tier 26 (≈101KB) completed in [32m0.000072s[0m
+Tier 27 (≈164KB) completed in [32m0.000172s[0m
+Tier 28 (≈265KB) completed in [32m0.000230s[0m
+Tier 29 (≈430KB) completed in [32m0.000293s[0m
+Tier 30 (≈696KB) completed in [32m0.000469s[0m
+Tier 31 (≈1MB) completed in [32m0.000748s[0m
+Tier 32 (≈1MB) completed in [32m0.001217s[0m
+Tier 33 (≈2MB) completed in [32m0.001979s[0m
+Tier 34 (≈4MB) completed in [32m0.003219s[0m
+Tier 35 (≈7MB) completed in [32m0.005189s[0m
+Tier 36 (≈12MB) completed in [32m0.008373s[0m
+Tier 37 (≈19MB) completed in [32m0.013719s[0m
+Tier 38 (≈31MB) completed in [32m0.022213s[0m
+Tier 39 (≈51MB) completed in [32m0.035643s[0m
+Tier 40 (≈83MB) completed in [32m0.057695s[0m
+Tier 41 (≈135MB) completed in [32m0.095212s[0m
+Tier 42 (≈218MB) exceeded 0.10s cutoff with time[31m 0.151934s[0m
 Succesfully completed tier: 41
 ---- END RESULTS ----
