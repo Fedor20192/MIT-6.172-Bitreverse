@@ -214,6 +214,9 @@ constexpr pocket max_pocket = UINT64_MAX;
 
 pocket reverse_pocket(const pocket x)
 {
+#ifdef __GFNI__
+    return __builtin_bitreverse64(x);
+#elif __SSSE3__
     __m128i s = _mm_cvtsi64_si128(x);
     const __m128i byte_level_shuffle_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1);
     s = _mm_shuffle_epi8(s, byte_level_shuffle_mask);
@@ -229,6 +232,9 @@ pocket reverse_pocket(const pocket x)
 
     const __m128i res = _mm_or_si128(high, _mm_slli_epi64(low, 4));
     return _mm_cvtsi128_si64(res);
+#else
+    return __builtin_bitreverse64(x);
+#endif
 }
 
 static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
