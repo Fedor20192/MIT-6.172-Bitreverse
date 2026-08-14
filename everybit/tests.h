@@ -27,6 +27,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <sys/prctl.h>
 #include <sys/types.h>
 
 #include "./bitarray.h"

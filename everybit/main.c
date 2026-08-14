@@ -41,6 +41,7 @@ void print_usage(const char* const argv_0);
 // ******************************* Functions ********************************
 
 int main(int argc, char** argv) {
+  prctl(PR_TASK_PERF_EVENTS_DISABLE);
   int retval = EXIT_SUCCESS;
 
   // Parse options.

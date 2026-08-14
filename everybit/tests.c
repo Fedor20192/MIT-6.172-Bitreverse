@@ -261,7 +261,9 @@ void testutil_rotate(const size_t bit_offset,
                      const ssize_t bit_right_shift_amount)
 {
     assert(test_bitarray != NULL);
+    prctl(PR_TASK_PERF_EVENTS_ENABLE);
     bitarray_rotate(test_bitarray, bit_offset, bit_length, bit_right_shift_amount);
+    prctl(PR_TASK_PERF_EVENTS_DISABLE);
     if (test_verbose)
     {
         bitarray_fprint(stdout, test_bitarray);
