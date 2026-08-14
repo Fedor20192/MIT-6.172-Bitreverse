@@ -28,6 +28,7 @@
 #include "./bitarray.h"
 
 #include <assert.h>
+#include "immintrin.h"
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -211,9 +212,22 @@ typedef u_int64_t pocket;
 constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
 constexpr pocket max_pocket = UINT64_MAX;
 
-pocket reverse_pocket(pocket x)
+pocket reverse_pocket(const pocket x)
 {
-    return __builtin_bitreverse64(x);
+    __m128i s = _mm_cvtsi64_si128(x);
+    const __m128i byte_level_shuffle_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1);
+    s = _mm_shuffle_epi8(s, byte_level_shuffle_mask);
+
+    const __m128i low_mask = _mm_set1_epi8(0x0f);
+
+    __m128i low = _mm_and_si128(low_mask, s), high = _mm_and_si128(low_mask, _mm_srli_epi64(s, 4));
+
+    const __m128i bit_level_shuffle_mask = _mm_setr_epi8(0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf);
+    low = _mm_shuffle_epi8(bit_level_shuffle_mask, low);
+    high = _mm_shuffle_epi8(bit_level_shuffle_mask, high);
+
+    const __m128i res = _mm_or_si128(high, _mm_slli_epi64(low, 4));
+    return _mm_cvtsi128_si64(res);
 }
 
 static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
@@ -229,21 +243,37 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
         }
         return iters;
     }
-    __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
-    for (; 2 * iters + 1 < cnt; iters++)
+
+    if (cnt < 3)
     {
-        const pocket left = reverse_pocket(arr[cnt - iters] << (pocket_bit_size - shift) & max_pocket);
-        const pocket right = reverse_pocket(arr[cnt - iters - 1] >> shift);
+        return 0;
+    }
 
-        arr[cnt - iters] = arr[cnt - iters] >> shift << shift;
-        arr[cnt - iters] |= reverse_pocket(arr[iters] << (pocket_bit_size - shift) & max_pocket);
+    pocket right_old = arr[cnt];
+    __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
+    for (; iters < (cnt - 1) / 2; iters++)
+    {
+        const pocket left = arr[iters];
+        const pocket left_beg = reverse_pocket(left << (pocket_bit_size - shift) & max_pocket);
+        const pocket left_end = reverse_pocket(left >> shift);
 
-        arr[cnt - iters - 1] &= (1ull << shift) - 1;
-        arr[cnt - iters - 1] |= reverse_pocket(arr[iters] >> shift);
+        const pocket right = arr[cnt - iters - 1];
+        const pocket right_end = reverse_pocket(right_old << (pocket_bit_size - shift) & max_pocket);
+        const pocket right_beg = reverse_pocket(right >> shift);
 
-        arr[iters] = left | right;
+        right_old = right_old >> shift << shift;
+        right_old |= left_beg;
+        arr[cnt - iters] = right_old;
+        arr[iters] = right_beg | right_end;
+
+        right_old = (right & (1ull << shift) - 1) | left_end;
     }
     __asm__ volatile("# LLVM-MCA-END hot_loop");
+
+    if (iters > 0)
+    {
+        arr[cnt - iters] = right_old;
+    }
     return iters;
 }
 

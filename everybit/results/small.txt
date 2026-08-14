@@ -1,12 +1,12 @@
 ---- RESULTS ----
-Tier 0 (≈0B) completed in [32m0.000001s[0m
+Tier 0 (≈0B) completed in [32m0.000002s[0m
 Tier 1 (≈0B) completed in [32m0.000001s[0m
 Tier 2 (≈1B) completed in [32m0.000001s[0m
 Tier 3 (≈1B) completed in [32m0.000001s[0m
 Tier 4 (≈2B) completed in [32m0.000001s[0m
 Tier 5 (≈4B) completed in [32m0.000001s[0m
 Tier 6 (≈6B) completed in [32m0.000001s[0m
-Tier 7 (≈11B) completed in [32m0.000001s[0m
+Tier 7 (≈11B) completed in [32m0.000002s[0m
 Tier 8 (≈18B) completed in [32m0.000002s[0m
 Tier 9 (≈29B) completed in [32m0.000002s[0m
 Tier 10 (≈47B) completed in [32m0.000002s[0m
@@ -16,26 +16,27 @@ Tier 13 (≈199B) completed in [32m0.000002s[0m
 Tier 14 (≈323B) completed in [32m0.000002s[0m
 Tier 15 (≈522B) completed in [32m0.000002s[0m
 Tier 16 (≈845B) completed in [32m0.000003s[0m
-Tier 17 (≈1KB) completed in [32m0.000004s[0m
-Tier 18 (≈2KB) completed in [32m0.000004s[0m
-Tier 19 (≈3KB) completed in [32m0.000006s[0m
+Tier 17 (≈1KB) completed in [32m0.000003s[0m
+Tier 18 (≈2KB) completed in [32m0.000003s[0m
+Tier 19 (≈3KB) completed in [32m0.000005s[0m
 Tier 20 (≈5KB) completed in [32m0.000005s[0m
-Tier 21 (≈9KB) completed in [32m0.000010s[0m
-Tier 22 (≈14KB) completed in [32m0.000011s[0m
-Tier 23 (≈23KB) completed in [32m0.000017s[0m
-Tier 24 (≈38KB) completed in [32m0.000027s[0m
-Tier 25 (≈62KB) completed in [32m0.000047s[0m
-Tier 26 (≈101KB) completed in [32m0.000071s[0m
-Tier 27 (≈164KB) completed in [32m0.000110s[0m
-Tier 28 (≈265KB) completed in [32m0.000177s[0m
-Tier 29 (≈430KB) completed in [32m0.000286s[0m
-Tier 30 (≈696KB) completed in [32m0.000519s[0m
-Tier 31 (≈1MB) completed in [32m0.000953s[0m
-Tier 32 (≈1MB) completed in [32m0.001227s[0m
-Tier 33 (≈2MB) completed in [32m0.001955s[0m
-Tier 34 (≈4MB) completed in [32m0.003210s[0m
-Tier 35 (≈7MB) completed in [32m0.005187s[0m
-Tier 36 (≈12MB) completed in [32m0.008823s[0m
-Tier 37 (≈19MB) exceeded 0.01s cutoff with time[31m 0.013797s[0m
-Succesfully completed tier: 36
+Tier 21 (≈9KB) completed in [32m0.000007s[0m
+Tier 22 (≈14KB) completed in [32m0.000009s[0m
+Tier 23 (≈23KB) completed in [32m0.000014s[0m
+Tier 24 (≈38KB) completed in [32m0.000031s[0m
+Tier 25 (≈62KB) completed in [32m0.000036s[0m
+Tier 26 (≈101KB) completed in [32m0.000064s[0m
+Tier 27 (≈164KB) completed in [32m0.000084s[0m
+Tier 28 (≈265KB) completed in [32m0.000133s[0m
+Tier 29 (≈430KB) completed in [32m0.000214s[0m
+Tier 30 (≈696KB) completed in [32m0.000367s[0m
+Tier 31 (≈1MB) completed in [32m0.000548s[0m
+Tier 32 (≈1MB) completed in [32m0.000923s[0m
+Tier 33 (≈2MB) completed in [32m0.001573s[0m
+Tier 34 (≈4MB) completed in [32m0.002400s[0m
+Tier 35 (≈7MB) completed in [32m0.003778s[0m
+Tier 36 (≈12MB) completed in [32m0.006169s[0m
+Tier 37 (≈19MB) completed in [32m0.009915s[0m
+Tier 38 (≈31MB) exceeded 0.01s cutoff with time[31m 0.016120s[0m
+Succesfully completed tier: 37
 ---- END RESULTS ----
