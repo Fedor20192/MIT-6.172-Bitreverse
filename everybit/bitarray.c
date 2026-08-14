@@ -222,7 +222,8 @@ pocket reverse_pocket(const pocket x)
 
     __m128i low = _mm_and_si128(low_mask, s), high = _mm_and_si128(low_mask, _mm_srli_epi64(s, 4));
 
-    const __m128i bit_level_shuffle_mask = _mm_setr_epi8(0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf);
+    const __m128i bit_level_shuffle_mask = _mm_setr_epi8(0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd,
+                                                         0x3, 0xb, 0x7, 0xf);
     low = _mm_shuffle_epi8(bit_level_shuffle_mask, low);
     high = _mm_shuffle_epi8(bit_level_shuffle_mask, high);
 
@@ -249,17 +250,18 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
         return 0;
     }
 
-    pocket right_old = arr[cnt];
+    pocket right_old = arr[cnt], reright_old = reverse_pocket(right_old);
     __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
     for (; iters < (cnt - 1) / 2; iters++)
     {
-        const pocket left = arr[iters];
-        const pocket left_beg = reverse_pocket(left << (pocket_bit_size - shift) & max_pocket);
-        const pocket left_end = reverse_pocket(left >> shift);
+        const pocket left = reverse_pocket(arr[iters]);
+        const pocket left_beg = left >> (pocket_bit_size - shift);
+        const pocket left_end = left << shift & max_pocket;
 
         const pocket right = arr[cnt - iters - 1];
-        const pocket right_end = reverse_pocket(right_old << (pocket_bit_size - shift) & max_pocket);
-        const pocket right_beg = reverse_pocket(right >> shift);
+        const pocket reright = reverse_pocket(right);
+        const pocket right_end = reright_old >> (pocket_bit_size - shift);
+        const pocket right_beg = reright << shift & max_pocket;
 
         right_old = right_old >> shift << shift;
         right_old |= left_beg;
@@ -267,13 +269,11 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
         arr[iters] = right_beg | right_end;
 
         right_old = (right & (1ull << shift) - 1) | left_end;
+        reright_old = reright;
     }
     __asm__ volatile("# LLVM-MCA-END hot_loop");
 
-    if (iters > 0)
-    {
-        arr[cnt - iters] = right_old;
-    }
+    arr[cnt - iters] = right_old;
     return iters;
 }
 
