@@ -28,7 +28,7 @@
 #include "./bitarray.h"
 
 #include <assert.h>
-#include "immintrin.h"
+#include <immintrin.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -210,7 +210,6 @@ void bitarray_rotate(bitarray_t* const bitarray,
 
 typedef u_int64_t pocket;
 constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
-constexpr pocket max_pocket = UINT64_MAX;
 
 pocket reverse_pocket(const pocket x)
 {
@@ -262,12 +261,12 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
     {
         const pocket left = reverse_pocket(arr[iters]);
         const pocket left_beg = left >> (pocket_bit_size - shift);
-        const pocket left_end = left << shift & max_pocket;
+        const pocket left_end = left << shift;
 
         const pocket right = arr[cnt - iters - 1];
         const pocket reright = reverse_pocket(right);
         const pocket right_end = reright_old >> (pocket_bit_size - shift);
-        const pocket right_beg = reright << shift & max_pocket;
+        const pocket right_beg = reright << shift;
 
         right_old = right_old >> shift << shift;
         right_old |= left_beg;
