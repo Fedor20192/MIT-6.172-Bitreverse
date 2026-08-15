@@ -214,7 +214,7 @@ constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
 pocket reverse_pocket(const pocket x)
 {
 #ifdef __GFNI__
-    const __m128i bits_level_reverse_mask = _mm_set1_epi64((__m64)0x8040201008040201ll);
+    const __m128i bits_level_reverse_mask = _mm_set1_epi64x(0x8040201008040201ll);
     const __m128i bits_level_reversed = _mm_gf2p8affine_epi64_epi8(x, bits_level_reverse_mask, 0);
     const __m128i byte_level_reverse_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
     return _mm_shuffle_epi8(bits_level_reversed, byte_level_reverse_mask);
@@ -223,20 +223,40 @@ pocket reverse_pocket(const pocket x)
 #endif
 }
 
-pocket left_shift(const pocket x, const size_t n) {
+pocket left_shift(pocket x, size_t n) {
+    if (n >= pocket_bit_size) {
+        return _mm_setzero_si128();
+    }
+    if (n >= 64) {
+        x = _mm_bslli_si128(x, 8);
+        n -= 64;
+    }
+    if (n == 0) {
+        return x;
+    }
     const __m128i shifted = _mm_bslli_si128(x, 8);
-    return _mm_shldv_epi64(x, shifted, _mm_set1_epi64((__m64)n));
+    return _mm_shldv_epi64(x, shifted, _mm_set1_epi64x(n));
 }
 
-pocket right_shift(const pocket x, const size_t n) {
+pocket right_shift(pocket x, size_t n) {
+    if (n >= pocket_bit_size) {
+        return _mm_setzero_si128();
+    }
+    if (n >= 64) {
+        x = _mm_bsrli_si128(x, 8);
+        n -= 64;
+    }
+    if (n == 0) {
+        return x;
+    }
     const __m128i shifted = _mm_bsrli_si128(x, 8);
-    return _mm_shrdv_epi64(shifted, x, _mm_set1_epi64((__m64)n));
+    return _mm_shrdv_epi64(x, shifted, _mm_set1_epi64x(n));
 }
 
 pocket make_ones(const size_t n) {
     const uint64_t low = _bzhi_u64(~0ull, n < 64 ? n : 64);
     const uint64_t high = n > 64 ? _bzhi_u64(~0ull, n - 64) : 0;
-    return _mm_set_epi64((__m64)high, (__m64)low);
+    return _mm_set_epi64x(high, low);
 }
 
 static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
@@ -272,7 +292,7 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
         const pocket right_end = right_shift(reright_old, pocket_bit_size - shift);
         const pocket right_beg = left_shift(reright, shift);
 
-        right_old = left_shift(right_shift(right_old, shift), shift);
+        right_old = _mm_andnot_si128(shift_ones_mask, right_old);
         right_old = _mm_or_si128(right_old, left_beg);
         arr[cnt - iters] = right_old;
         arr[iters] = _mm_or_si128(right_beg, right_end);
