@@ -1,23 +1,23 @@
-# started on Sat Aug 15 16:05:49 2026
+# started on Sat Aug 15 20:42:02 2026
 
-55409.37,msec,task-clock,0.03%,55466940768,100.00,0.998,CPUs utilized
-953,,context-switches,11.67%,55466940768,100.00,17.199,/sec
-41,,cpu-migrations,6.54%,55466940768,100.00,0.740,/sec
-107,,page-faults,0.19%,55466940768,100.00,1.931,/sec
-287543944344,,instructions,0.02%,18486973735,33.00,1.18,insn per cycle
-243480499181,,cycles,0.03%,22184736507,39.00,4.394,GHz
-67565662846,,branches,0.02%,25882383147,46.00,1.219,G/sec
-140043527,,branch-misses,0.21%,29581237567,53.00,0.21,of all branches
-,0.09%,33279707097,59.00,,,,TopdownL1
-,,,,,8.6,%  tma_backend_bound
-,,,,,81.8,%  tma_bad_speculation
-,,,,,1.4,%  tma_frontend_bound
-,,,,,8.3,%  tma_retiring
-88542256401,,L1-dcache-loads,0.01%,36978250279,66.00,1.598,G/sec
-235777051,,L1-dcache-load-misses,0.24%,36979051537,66.00,0.27,of all L1-dcache accesses
-5616727,,LLC-loads,1.13%,36980005328,66.00,101.368,K/sec
-3046208,,LLC-load-misses,1.73%,33282204261,60.00,54.23,of all LL-cache accesses
-33486359,,L1-icache-load-misses,2.66%,14791791226,26.00,,
-88623293188,,dTLB-loads,0.02%,14791196904,26.00,1.599,G/sec
-466484,,dTLB-load-misses,7.40%,14790039147,26.00,0.00,of all dTLB cache accesses
-4814725,,iTLB-load-misses,2.99%,14788806785,26.00,,
+55665.58,msec,task-clock,0.19%,55934363809,100.00,0.998,CPUs utilized
+972,,context-switches,13.77%,55934363809,100.00,17.461,/sec
+40,,cpu-migrations,9.57%,55934363809,100.00,0.719,/sec
+89,,page-faults,0.75%,55934363809,100.00,1.599,/sec
+286230671466,,instructions,0.14%,18644263833,33.00,1.17,insn per cycle
+244195861804,,cycles,0.14%,22374100007,40.00,4.387,GHz
+67317162725,,branches,0.10%,26104011715,46.00,1.209,G/sec
+142892049,,branch-misses,1.01%,29832820241,53.00,0.21,of all branches
+,0.10%,33561401604,60.00,,,,TopdownL1
+,,,,,8.3,%  tma_backend_bound
+,,,,,82.5,%  tma_bad_speculation
+,,,,,1.8,%  tma_frontend_bound
+,,,,,7.5,%  tma_retiring
+88517510263,,L1-dcache-loads,0.10%,37289728705,66.00,1.590,G/sec
+238079152,,L1-dcache-load-misses,0.95%,37289344146,66.00,0.27,of all L1-dcache accesses
+6228256,,LLC-loads,4.68%,37289797070,66.00,111.887,K/sec
+3395022,,LLC-load-misses,2.76%,33560263802,59.00,54.51,of all LL-cache accesses
+38852146,,L1-icache-load-misses,10.72%,14915071804,26.00,,
+88574399748,,dTLB-loads,0.10%,14915956949,26.00,1.591,G/sec
+518024,,dTLB-load-misses,4.27%,14916370259,26.00,0.00,of all dTLB cache accesses
+4480835,,iTLB-load-misses,2.48%,14915383067,26.00,,
