@@ -55,7 +55,7 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 PRODUCT = everybit
 
 # What we're building with
-CC = clang
+CC = clang-20
 CFLAGS = -std=c23 -Wall -m64 -g
 LDFLAGS = -flto -fuse-ld=gold
 
