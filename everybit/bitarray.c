@@ -208,32 +208,35 @@ void bitarray_rotate(bitarray_t* const bitarray,
                          modulo(-bit_right_amount, bit_length));
 }
 
-typedef u_int64_t pocket;
+typedef __m128i pocket;
 constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
 
 pocket reverse_pocket(const pocket x)
 {
 #ifdef __GFNI__
-    return __builtin_bitreverse64(x);
-#elif __SSSE3__
-    __m128i s = _mm_cvtsi64_si128(x);
-    const __m128i byte_level_shuffle_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1);
-    s = _mm_shuffle_epi8(s, byte_level_shuffle_mask);
-
-    const __m128i low_mask = _mm_set1_epi8(0x0f);
-
-    __m128i low = _mm_and_si128(low_mask, s), high = _mm_and_si128(low_mask, _mm_srli_epi64(s, 4));
-
-    const __m128i bit_level_shuffle_mask = _mm_setr_epi8(0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd,
-                                                         0x3, 0xb, 0x7, 0xf);
-    low = _mm_shuffle_epi8(bit_level_shuffle_mask, low);
-    high = _mm_shuffle_epi8(bit_level_shuffle_mask, high);
-
-    const __m128i res = _mm_or_si128(high, _mm_slli_epi64(low, 4));
-    return _mm_cvtsi128_si64(res);
+    const __m128i bits_level_reverse_mask = _mm_set1_epi64((__m64)0x8040201008040201ll);
+    const __m128i bits_level_reversed = _mm_gf2p8affine_epi64_epi8(x, bits_level_reverse_mask, 0);
+    const __m128i byte_level_reverse_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    return _mm_shuffle_epi8(bits_level_reversed, byte_level_reverse_mask);
 #else
-    return __builtin_bitreverse64(x);
+    static_assert(0, "cpu must support avx-512");
 #endif
+}
+
+pocket left_shift(const pocket x, const size_t n) {
+    const __m128i shifted = _mm_bslli_si128(x, 8);
+    return _mm_shldv_epi64(x, shifted, _mm_set1_epi64((__m64)n));
+}
+
+pocket right_shift(const pocket x, const size_t n) {
+    const __m128i shifted = _mm_bsrli_si128(x, 8);
+    return _mm_shrdv_epi64(shifted, x, _mm_set1_epi64((__m64)n));
+}
+
+pocket make_ones(const size_t n) {
+    const uint64_t low = _bzhi_u64(~0ull, n < 64 ? n : 64);
+    const uint64_t high = n > 64 ? _bzhi_u64(~0ull, n - 64) : 0;
+    return _mm_set_epi64((__m64)high, (__m64)low);
 }
 
 static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
@@ -255,25 +258,26 @@ static size_t pocket_reverse(pocket* arr, const size_t shift, const size_t cnt)
         return 0;
     }
 
+    const pocket shift_ones_mask = make_ones(shift);
     pocket right_old = arr[cnt], reright_old = reverse_pocket(right_old);
     __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
     for (; iters < (cnt - 1) / 2; iters++)
     {
         const pocket left = reverse_pocket(arr[iters]);
-        const pocket left_beg = left >> (pocket_bit_size - shift);
-        const pocket left_end = left << shift;
+        const pocket left_beg = right_shift(left, pocket_bit_size - shift);
+        const pocket left_end = left_shift(left, shift);
 
         const pocket right = arr[cnt - iters - 1];
         const pocket reright = reverse_pocket(right);
-        const pocket right_end = reright_old >> (pocket_bit_size - shift);
-        const pocket right_beg = reright << shift;
+        const pocket right_end = right_shift(reright_old, pocket_bit_size - shift);
+        const pocket right_beg = left_shift(reright, shift);
 
-        right_old = right_old >> shift << shift;
-        right_old |= left_beg;
+        right_old = left_shift(right_shift(right_old, shift), shift);
+        right_old = _mm_or_si128(right_old, left_beg);
         arr[cnt - iters] = right_old;
-        arr[iters] = right_beg | right_end;
+        arr[iters] = _mm_or_si128(right_beg, right_end);
 
-        right_old = (right & (1ull << shift) - 1) | left_end;
+        right_old = _mm_or_si128(_mm_and_si128(right, shift_ones_mask), left_end);
         reright_old = reright;
     }
     __asm__ volatile("# LLVM-MCA-END hot_loop");
