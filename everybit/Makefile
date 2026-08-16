@@ -56,7 +56,7 @@ PRODUCT = everybit
 
 # What we're building with
 CC = clang-20
-CFLAGS = -std=c23 -Wall -m64 -g
+CFLAGS = -std=c23 -Wall -m64 -g -march=native
 LDFLAGS = -flto -fuse-ld=gold
 
 # We need to link against the timing library for whatever OS we're on.
@@ -87,7 +87,7 @@ $(shell echo debug >.buildmode)
 endif
 else
 # We want release mode.
-CFLAGS += -O3 -DNDEBUG -march=native
+CFLAGS += -O3 -DNDEBUG
 ifneq ($(OLD_MODE),release)
 $(shell echo release >.buildmode)
 endif

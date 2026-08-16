@@ -210,22 +210,24 @@ static pocket reverse_pocket(const pocket x) {
 }
 
 static pocket left_shift(pocket x, const size_t n) {
+    assert(n != 0);
+    assert(n < pocket_bit_size);
     const pocket idx = _mm256_sub_epi64(_mm256_setr_epi64x(0, 1, 2, 3), _mm256_set1_epi64x(n / 64));
     const __mmask8 mask = (0x0fu << n / 64) & 0x0f;
     x = _mm256_maskz_permutexvar_epi64(mask, idx, x);
 
-    const pocket one_idx = _mm256_setr_epi64x(3, 0, 1, 2);
-    const pocket shifted = _mm256_maskz_permutexvar_epi64(0x0e, one_idx, x);
+    const pocket shifted = _mm256_alignr_epi64(x, _mm256_setzero_si256(), 3);
     return _mm256_shldv_epi64(x, shifted, _mm256_set1_epi64x(n % 64));
 }
 
 static pocket right_shift(pocket x, const size_t n) {
+    assert(n != 0);
+    assert(n < pocket_bit_size);
     const pocket idx = _mm256_add_epi64(_mm256_setr_epi64x(0, 1, 2, 3), _mm256_set1_epi64x(n / 64));
-    const __mmask8 mask = (1u << (4 - n / 64)) - 1;
+    const __mmask8 mask = 0x0fu >> n / 64;
     x = _mm256_maskz_permutexvar_epi64(mask, idx, x);
 
-    const pocket one_idx = _mm256_setr_epi64x(1, 2, 3, 0);
-    const pocket shifted = _mm256_maskz_permutexvar_epi64(7, one_idx, x);
+    const pocket shifted = _mm256_alignr_epi64(_mm256_setzero_si256(), x, 1);
     return _mm256_shrdv_epi64(x, shifted, _mm256_set1_epi64x(n % 64));
 }
 
