@@ -230,12 +230,9 @@ static pocket right_shift(pocket x, const size_t n) {
 }
 
 static pocket make_ones(const size_t n) {
-    const uint64_t zero = _bzhi_u64(~0ull, n < 64 ? n : 64);
-    const uint64_t one = n > 64 ? _bzhi_u64(~0ull, n < 128 ? n - 64 : 64) : 0;
-    const uint64_t two = n > 128 ? _bzhi_u64(~0ull, n < 192 ? n - 128 : 64) : 0;
-    const uint64_t three = n > 192 ? _bzhi_u64(~0ull, n - 192) : 0;
-
-    return _mm256_setr_epi64x(zero, one, two, three);
+    const size_t q = n / 64, r = n % 64;
+    const pocket full = _mm256_maskz_set1_epi64(_bzhi_u64(~0ll, q), -1ll);
+    return _mm256_mask_set1_epi64(full, 1ull << q, _bzhi_u64(~0ll, r));
 }
 
 static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) {
@@ -266,12 +263,11 @@ static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) 
         const pocket right_end = right_shift(reright_old, pocket_bit_size - shift);
         const pocket right_beg = left_shift(reright, shift);
 
-        right_old = _mm256_andnot_si256(shift_ones_mask, right_old);
-        right_old = _mm256_or_si256(right_old, left_beg);
+        right_old = _mm256_ternarylogic_epi64(shift_ones_mask, right_old, left_beg, 0xAE); // 0xAE = !A & B | C
         arr[cnt - iters] = right_old;
         arr[iters] = _mm256_or_si256(right_beg, right_end);
 
-        right_old = _mm256_or_si256(_mm256_and_si256(right, shift_ones_mask), left_end);
+        right_old = _mm256_ternarylogic_epi64(right, shift_ones_mask, left_end, 0xEA); // 0xEA = A & B | C
         reright_old = reright;
     }
     __asm__ volatile("# LLVM-MCA-END hot_loop");
