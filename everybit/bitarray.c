@@ -51,6 +51,12 @@ struct bitarray {
     char *buf;
 };
 
+typedef __m512i pocket;
+static constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
+static constexpr unsigned word_bit_size = sizeof(uint64_t) * CHAR_BIT;
+static_assert(sizeof(pocket) % sizeof(uint64_t) == 0);
+static constexpr unsigned words_in_pocket = sizeof(pocket) / sizeof(uint64_t);
+
 
 // ******************** Prototypes for static functions *********************
 
@@ -105,7 +111,7 @@ static char bitmask(const size_t bit_index);
 bitarray_t *bitarray_new(const size_t bit_sz) {
     // Allocate an underlying buffer of ceil(bit_sz/8) bytes.
     const size_t bytes = (bit_sz + 7) / 8;
-    char *buf = _mm_malloc(bytes, 32);
+    char *buf = _mm_malloc(bytes, sizeof(pocket));
     if (mlock(buf, bytes) != 0) {
         perror("mlock");
         return NULL;
@@ -194,16 +200,25 @@ void bitarray_rotate(bitarray_t *const bitarray,
                          modulo(-bit_right_amount, bit_length));
 }
 
-typedef __m256i pocket;
-constexpr unsigned pocket_bit_size = sizeof(pocket) * CHAR_BIT;
+alignas(sizeof(pocket)) static constexpr uint8_t rev_bytes_512_raw[sizeof(pocket)]
+
+
+
+
+=
+ {
+    63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,
+    47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32,
+    31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
+    15, 14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0
+};
 
 static pocket reverse_pocket(const pocket x) {
 #if defined(__GFNI__) && defined(__SSSE3__) && defined(__AVX512VL__) && defined(__AVX512VBMI__) && defined(__BMI2__)
-    const pocket bits_level_reverse_mask = _mm256_set1_epi64x(0x8040201008040201ll);
-    const pocket bits_level_reversed = _mm256_gf2p8affine_epi64_epi8(x, bits_level_reverse_mask, 0);
-    const pocket byte_level_reverse_mask = _mm256_setr_epi8(31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
-                                                            16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-    return _mm256_permutexvar_epi8(byte_level_reverse_mask, bits_level_reversed);
+    const pocket bits_level_reverse_mask = _mm512_set1_epi64(0x8040201008040201ll);
+    const pocket bits_level_reversed = _mm512_gf2p8affine_epi64_epi8(x, bits_level_reverse_mask, 0);
+    const pocket byte_level_reverse_mask = _mm512_loadu_si512(rev_bytes_512_raw);
+    return _mm512_permutexvar_epi8(byte_level_reverse_mask, bits_level_reversed);
 #else
     static_assert(0, "cpu must support avx-512");
 #endif
@@ -212,29 +227,31 @@ static pocket reverse_pocket(const pocket x) {
 static pocket left_shift(pocket x, const size_t n) {
     assert(n != 0);
     assert(n < pocket_bit_size);
-    const pocket idx = _mm256_sub_epi64(_mm256_setr_epi64x(0, 1, 2, 3), _mm256_set1_epi64x(n / 64));
-    const __mmask8 mask = (0x0fu << n / 64) & 0x0f;
-    x = _mm256_maskz_permutexvar_epi64(mask, idx, x);
+    const pocket idx = _mm512_sub_epi64(
+        _mm512_setr_epi64(0, 1, 2, 3, 4, 5, 6, 7), _mm512_set1_epi64(n / word_bit_size));
+    const __mmask8 mask = (0xffu << n / word_bit_size) & 0xffu;
+    x = _mm512_maskz_permutexvar_epi64(mask, idx, x);
 
-    const pocket shifted = _mm256_alignr_epi64(x, _mm256_setzero_si256(), 3);
-    return _mm256_shldv_epi64(x, shifted, _mm256_set1_epi64x(n % 64));
+    const pocket shifted = _mm512_alignr_epi64(x, _mm512_setzero_si512(), words_in_pocket - 1);
+    return _mm512_shldv_epi64(x, shifted, _mm512_set1_epi64(n % word_bit_size));
 }
 
 static pocket right_shift(pocket x, const size_t n) {
     assert(n != 0);
     assert(n < pocket_bit_size);
-    const pocket idx = _mm256_add_epi64(_mm256_setr_epi64x(0, 1, 2, 3), _mm256_set1_epi64x(n / 64));
-    const __mmask8 mask = 0x0fu >> n / 64;
-    x = _mm256_maskz_permutexvar_epi64(mask, idx, x);
+    const pocket idx =
+            _mm512_add_epi64(_mm512_setr_epi64(0, 1, 2, 3, 4, 5, 6, 7), _mm512_set1_epi64(n / word_bit_size));
+    const __mmask8 mask = 0xffu >> n / word_bit_size;
+    x = _mm512_maskz_permutexvar_epi64(mask, idx, x);
 
-    const pocket shifted = _mm256_alignr_epi64(_mm256_setzero_si256(), x, 1);
-    return _mm256_shrdv_epi64(x, shifted, _mm256_set1_epi64x(n % 64));
+    const pocket shifted = _mm512_alignr_epi64(_mm512_setzero_si512(), x, 1);
+    return _mm512_shrdv_epi64(x, shifted, _mm512_set1_epi64(n % word_bit_size));
 }
 
 static pocket make_ones(const size_t n) {
-    const size_t q = n / 64, r = n % 64;
-    const pocket full = _mm256_maskz_set1_epi64(_bzhi_u64(~0ll, q), -1ll);
-    return _mm256_mask_set1_epi64(full, 1ull << q, _bzhi_u64(~0ll, r));
+    const size_t q = n / word_bit_size, r = n % word_bit_size;
+    const pocket full = _mm512_maskz_set1_epi64(_bzhi_u64(~0ll, q), -1ll);
+    return _mm512_mask_set1_epi64(full, 1ull << q, _bzhi_u64(~0ll, r));
 }
 
 static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) {
@@ -255,6 +272,7 @@ static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) 
     const pocket shift_ones_mask = make_ones(shift);
     pocket right_old = arr[cnt], reright_old = reverse_pocket(right_old);
     __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
+#pragma clang loop unroll_count(4)
     for (; iters < (cnt - 1) / 2; iters++) {
         const pocket left = reverse_pocket(arr[iters]);
         const pocket left_beg = right_shift(left, pocket_bit_size - shift);
@@ -265,11 +283,11 @@ static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) 
         const pocket right_end = right_shift(reright_old, pocket_bit_size - shift);
         const pocket right_beg = left_shift(reright, shift);
 
-        right_old = _mm256_ternarylogic_epi64(shift_ones_mask, right_old, left_beg, 0xAE); // 0xAE = !A & B | C
+        right_old = _mm512_ternarylogic_epi64(shift_ones_mask, right_old, left_beg, 0xAE); // 0xAE = !A & B | C
         arr[cnt - iters] = right_old;
-        arr[iters] = _mm256_or_si256(right_beg, right_end);
+        arr[iters] = _mm512_or_si512(right_beg, right_end);
 
-        right_old = _mm256_ternarylogic_epi64(right, shift_ones_mask, left_end, 0xEA); // 0xEA = A & B | C
+        right_old = _mm512_ternarylogic_epi64(right, shift_ones_mask, left_end, 0xEA); // 0xEA = A & B | C
         reright_old = reright;
     }
     __asm__ volatile("# LLVM-MCA-END hot_loop");
