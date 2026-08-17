@@ -1,0 +1,11 @@
+Performance counter stats for './everybit -m':
+
+      305661156365      cpu-cycles
+      152940831449      CYCLE_ACTIVITY.STALLS_MEM_ANY
+        2005355049      CYCLE_ACTIVITY.STALLS_L1D_MISS
+        1941880328      CYCLE_ACTIVITY.STALLS_L2_MISS
+
+      68.926735519 seconds time elapsed
+
+      67.913389000 seconds user
+       0.978702000 seconds sys

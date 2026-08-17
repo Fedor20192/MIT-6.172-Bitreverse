@@ -228,6 +228,7 @@ static pocket left_rotate(const pocket x, const size_t n) {
     assert(n > 0);
     assert(n < pocket_bit_size);
     const size_t q = n / word_bit_size, r = n % word_bit_size;
+    assert(q < words_in_pocket);
 
     const pocket byte_level_rotate_mask = _mm512_setr_epi64(-q & 7, 1 - q & 7, 2 - q & 7, 3 - q & 7, 4 - q & 7,
                                                             5 - q & 7, 6 - q & 7, 7 - q & 7);
@@ -241,6 +242,7 @@ static pocket left_rotate(const pocket x, const size_t n) {
 
 static pocket make_ones(const size_t n) {
     const size_t q = n / word_bit_size, r = n % word_bit_size;
+    assert(q < words_in_pocket);
     const pocket full = _mm512_maskz_set1_epi64(_bzhi_u64(~0ll, q), -1ll);
     return _mm512_mask_set1_epi64(full, 1ull << q, _bzhi_u64(~0ll, r));
 }
@@ -263,7 +265,6 @@ static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) 
     const pocket shift_ones_mask = make_ones(shift);
     pocket right_old = arr[cnt], reright_old = left_rotate(reverse_pocket(right_old), shift);
     __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
-#pragma clang loop unroll_count(4)
     for (; iters < (cnt - 1) / 2; iters++) {
         const pocket left = left_rotate(reverse_pocket(arr[iters]), shift);
         const pocket right = arr[cnt - iters - 1];
