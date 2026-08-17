@@ -224,28 +224,19 @@ static pocket reverse_pocket(const pocket x) {
 #endif
 }
 
-static pocket left_shift(pocket x, const size_t n) {
-    assert(n != 0);
+static pocket left_rotate(const pocket x, const size_t n) {
+    assert(n > 0);
     assert(n < pocket_bit_size);
-    const pocket idx = _mm512_sub_epi64(
-        _mm512_setr_epi64(0, 1, 2, 3, 4, 5, 6, 7), _mm512_set1_epi64(n / word_bit_size));
-    const __mmask8 mask = (0xffu << n / word_bit_size) & 0xffu;
-    x = _mm512_maskz_permutexvar_epi64(mask, idx, x);
+    const size_t q = n / word_bit_size, r = n % word_bit_size;
 
-    const pocket shifted = _mm512_alignr_epi64(x, _mm512_setzero_si512(), words_in_pocket - 1);
-    return _mm512_shldv_epi64(x, shifted, _mm512_set1_epi64(n % word_bit_size));
-}
+    const pocket byte_level_rotate_mask = _mm512_setr_epi64(-q & 7, 1 - q & 7, 2 - q & 7, 3 - q & 7, 4 - q & 7,
+                                                            5 - q & 7, 6 - q & 7, 7 - q & 7);
+    const pocket byte_level_rotate_shifted_mask = _mm512_setr_epi64(7 - q & 7, -q & 7, 1 - q & 7, 2 - q & 7,
+                                                                    3 - q & 7, 4 - q & 7, 5 - q & 7, 6 - q & 7);
 
-static pocket right_shift(pocket x, const size_t n) {
-    assert(n != 0);
-    assert(n < pocket_bit_size);
-    const pocket idx =
-            _mm512_add_epi64(_mm512_setr_epi64(0, 1, 2, 3, 4, 5, 6, 7), _mm512_set1_epi64(n / word_bit_size));
-    const __mmask8 mask = 0xffu >> n / word_bit_size;
-    x = _mm512_maskz_permutexvar_epi64(mask, idx, x);
-
-    const pocket shifted = _mm512_alignr_epi64(_mm512_setzero_si512(), x, 1);
-    return _mm512_shrdv_epi64(x, shifted, _mm512_set1_epi64(n % word_bit_size));
+    const pocket byte_level_rotated = _mm512_permutexvar_epi64(byte_level_rotate_mask, x);
+    const pocket byte_level_rotated_shifted = _mm512_permutexvar_epi64(byte_level_rotate_shifted_mask, x);
+    return _mm512_shldv_epi64(byte_level_rotated, byte_level_rotated_shifted, _mm512_set1_epi64(r));
 }
 
 static pocket make_ones(const size_t n) {
@@ -270,24 +261,17 @@ static size_t pocket_reverse(pocket *arr, const size_t shift, const size_t cnt) 
     }
 
     const pocket shift_ones_mask = make_ones(shift);
-    pocket right_old = arr[cnt], reright_old = reverse_pocket(right_old);
+    pocket right_old = arr[cnt], reright_old = left_rotate(reverse_pocket(right_old), shift);
     __asm__ volatile("# LLVM-MCA-BEGIN hot_loop");
 #pragma clang loop unroll_count(4)
     for (; iters < (cnt - 1) / 2; iters++) {
-        const pocket left = reverse_pocket(arr[iters]);
-        const pocket left_beg = right_shift(left, pocket_bit_size - shift);
-        const pocket left_end = left_shift(left, shift);
-
+        const pocket left = left_rotate(reverse_pocket(arr[iters]), shift);
         const pocket right = arr[cnt - iters - 1];
-        const pocket reright = reverse_pocket(right);
-        const pocket right_end = right_shift(reright_old, pocket_bit_size - shift);
-        const pocket right_beg = left_shift(reright, shift);
+        const pocket reright = left_rotate(reverse_pocket(right), shift);
 
-        right_old = _mm512_ternarylogic_epi64(shift_ones_mask, right_old, left_beg, 0xAE); // 0xAE = !A & B | C
-        arr[cnt - iters] = right_old;
-        arr[iters] = _mm512_or_si512(right_beg, right_end);
-
-        right_old = _mm512_ternarylogic_epi64(right, shift_ones_mask, left_end, 0xEA); // 0xEA = A & B | C
+        arr[cnt - iters] = _mm512_ternarylogic_epi64(shift_ones_mask, left, right_old, 0xCA); // 0xCA = !A & C | A & B
+        arr[iters] = _mm512_ternarylogic_epi64(shift_ones_mask, reright, reright_old, 0xAC);
+        right_old = _mm512_ternarylogic_epi64(shift_ones_mask, left, right, 0xAC); // 0xAC = A & C | !A & B
         reright_old = reright;
     }
     __asm__ volatile("# LLVM-MCA-END hot_loop");
